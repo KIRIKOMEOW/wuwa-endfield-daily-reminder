@@ -2,9 +2,9 @@
 
 **简体中文** · [English](README.en.md)
 
-**[下载 Windows x64 便携版（v1.6.2，ZIP）](https://github.com/KIRIKOMEOW/wuwa-endfield-daily-reminder/releases/download/v1.6.2/Wuwa-Endfield-Daily-Reminder-v1.6.2-win-x64.zip)**
+**[下载 GameDailyWidget.exe（Windows x64 · v1.6.2）](https://github.com/KIRIKOMEOW/wuwa-endfield-daily-reminder/releases/download/v1.6.2/GameDailyWidget.exe)**
 
-完整解压 ZIP，双击文件夹中的 `GameDailyWidget.exe` 即可启动。便携包已包含 .NET 运行时。
+下载后双击 EXE 即可启动，文件已包含 .NET 运行时。
 
 一个常驻 Windows 桌面的双游戏组件。在「双生」总览里，一眼看清鸣潮的波片、终末地的理智、两边今天还差多少活跃度，以及哪项活动最先截止。
 

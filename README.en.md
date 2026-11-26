@@ -2,9 +2,9 @@
 
 [简体中文](README.md) · **English**
 
-**[Download the Windows x64 portable app (v1.6.2, ZIP)](https://github.com/KIRIKOMEOW/wuwa-endfield-daily-reminder/releases/download/v1.6.2/Wuwa-Endfield-Daily-Reminder-v1.6.2-win-x64.zip)**
+**[Download GameDailyWidget.exe (Windows x64 · v1.6.2)](https://github.com/KIRIKOMEOW/wuwa-endfield-daily-reminder/releases/download/v1.6.2/GameDailyWidget.exe)**
 
-Extract the entire ZIP, then double-click `GameDailyWidget.exe` in the extracted folder. The .NET runtime is included.
+Double-click the downloaded EXE to start the widget. The .NET runtime is included.
 
 A Windows desktop widget for Wuthering Waves and Arknights: Endfield. The split overview shows Waveplates, Sanity, daily activity and the next event deadline for each game.
 
