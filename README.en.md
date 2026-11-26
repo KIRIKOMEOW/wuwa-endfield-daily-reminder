@@ -31,4 +31,8 @@ dotnet run --project .\GameDailyWidget\GameDailyWidget.csproj -c Release --no-bu
 
 Omit the final `-- --demo` to use your own account. Run `.\GameDailyWidget\build-release.ps1` to build a self-contained portable package. The archives are written to `GameDailyWidget\dist\`.
 
-[Detailed user guide and offline checks (Chinese)](GameDailyWidget/README.md) · [Third-party notices](GameDailyWidget/THIRD_PARTY_NOTICES.txt)
+[Detailed user guide and offline checks (Chinese)](GameDailyWidget/README.md)
+
+## License
+
+This project's original code is licensed under the [MIT License](LICENSE). Game artwork (including the artwork in the preview screenshot) and trademarks for Wuthering Waves and Arknights: Endfield belong to their respective owners and are outside the scope of this license. For third-party component licenses, see the [third-party notices](GameDailyWidget/THIRD_PARTY_NOTICES.txt).

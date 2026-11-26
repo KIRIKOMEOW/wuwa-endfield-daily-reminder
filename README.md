@@ -31,4 +31,8 @@ dotnet run --project .\GameDailyWidget\GameDailyWidget.csproj -c Release --no-bu
 
 接入自己的账号时，去掉最后的 `-- --demo`。生成包含运行时的便携版可运行 `.\GameDailyWidget\build-release.ps1`，压缩包位于 `GameDailyWidget\dist\`。
 
-[中文使用说明与离线检查](GameDailyWidget/README.md) · [第三方声明](GameDailyWidget/THIRD_PARTY_NOTICES.txt)
+[中文使用说明与离线检查](GameDailyWidget/README.md)
+
+## 许可证
+
+本项目的原创代码采用 [MIT 许可证](LICENSE)。鸣潮和明日方舟：终末地的游戏图片（包括预览截图中的立绘）和商标归各自权利人所有，不在本项目的 MIT 授权范围内。第三方组件的许可见[第三方声明](GameDailyWidget/THIRD_PARTY_NOTICES.txt)。

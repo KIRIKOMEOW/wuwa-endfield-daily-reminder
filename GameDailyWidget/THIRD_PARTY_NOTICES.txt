@@ -37,5 +37,6 @@ SOFTWARE.
 
 Arknights: Endfield and Skland are trademarks of their respective owners.
 This is an unofficial desktop widget and is not affiliated with Hypergryph.
-The interface uses original code-drawn shapes and text; no game illustration
-or mobile application artwork is redistributed in this project.
+Wuthering Waves and Arknights: Endfield artwork (including artwork shown in
+the README preview) and trademarks belong to their respective owners and
+are outside the scope of the project's MIT License.
