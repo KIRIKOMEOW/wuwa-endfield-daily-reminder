@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.17763.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>GameDailyWidget</AssemblyName>
+    <RootNamespace>GameDailyWidget</RootNamespace>
+    <Version>1.6.2</Version>
+    <Product>双游戏日常组件</Product>
+    <Description>鸣潮与终末地日常桌面组件</Description>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <DefaultItemExcludes>$(DefaultItemExcludes);dist/**;verification/**;design/**;tests/**</DefaultItemExcludes>
+  </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="verification/fixtures/events/endfield-progress.json" LogicalName="events.endfield-progress.json" />
+    <EmbeddedResource Include="verification/fixtures/events/coverage.tsv" LogicalName="events.coverage.tsv" />
+    <EmbeddedResource Include="verification/fixtures/events/*.txt" LogicalName="events.%(Filename)%(Extension)" />
+    <ProjectReference Include="../WuwaLauncherProbe/Core/Wuwa.Core.csproj" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Toolkit.Uwp.Notifications" Version="7.1.3" />
+    <!-- The shared Endfield (Skland) client sources now live in ./Endfield and are
+         picked up by default globbing; no sibling EndfieldDesktopWidget folder is needed. -->
+  </ItemGroup>
+</Project>

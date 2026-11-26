@@ -1,0 +1,15 @@
+bin/
+obj/
+dist/
+*.user
+双游戏日常组件-v*/
+design/*/art/
+design/*/mock.png
+# Local visual evidence may contain downloaded official artwork.
+verification/v1.5.0-*.png
+verification/v1.5.1-*.png
+verification/v1.5.2-*.png
+verification/v1.5.3-*.png
+verification/v1.6.0-*.png
+verification/v1.6.1-*.png
+verification/v1.6.2-*.png

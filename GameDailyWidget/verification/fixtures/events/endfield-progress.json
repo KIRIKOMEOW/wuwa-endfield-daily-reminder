@@ -1,0 +1,20 @@
+{
+  "base": {"roleId": "sample-role"},
+  "indieHard": {"indieHardGroups": [{
+    "name": "演示关卡组", "activityName": "演示丰碑", "isInActivity": true,
+    "activityStartTs": "1893456000", "activityEndTs": "1895184000",
+    "dungeonGroups": [
+      {"normalDungeon": {"isPass": true}, "hardDungeon": {"isPass": true}},
+      {"normalDungeon": {"isPass": true}, "hardDungeon": {"isPass": false}}
+    ]
+  }]},
+  "warEchoes": {
+    "activity": {"name": ""},
+    "seasons": [{"name": "演示赛季", "startTs": "1893456000", "endTs": "1895184000", "stars": 7, "allPlusTasks": true}]
+  },
+  "crisisContract": [{
+    "name": "演示合约", "startAtTs": "1893456000", "endAtTs": "1895356800", "gameplayEndAtTs": "1895184000",
+    "weeklyMission": {"count": 1, "total": 1}, "indicatorMission": {"count": 2, "total": 2},
+    "stageMission": {"count": 3, "total": 3}
+  }]
+}
