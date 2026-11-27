@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace GameDailyWidget;
 
-internal sealed class EventFeed : IDisposable
+internal sealed partial class EventFeed : IDisposable
 {
     internal const string Cdn = "https://media-cdn-mingchao.kurogame.com/akiwebsite/website2.0/json/G152/zh/";
     internal const string News = "https://endfield.hypergryph.com/news";

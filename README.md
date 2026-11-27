@@ -2,7 +2,7 @@
 
 **简体中文** · [English](README.en.md)
 
-**[下载 GameDailyWidget.exe（Windows x64 · v1.6.2）](https://github.com/KIRIKOMEOW/wuwa-endfield-daily-reminder/releases/download/v1.6.2/GameDailyWidget.exe)**
+**[下载最新版 GameDailyWidget.exe（Windows x64）](https://github.com/KIRIKOMEOW/wuwa-endfield-daily-reminder/releases/latest/download/GameDailyWidget.exe)**
 
 下载后双击 EXE 即可启动，文件已包含 .NET 运行时。
 
@@ -10,7 +10,7 @@
 
 ![双生总览：左侧显示鸣潮波片与活跃度，右侧显示终末地理智与活跃度，底部列出卡池和活动倒计时。](docs/overview.png)
 
-*v1.6.2「双生」总览。*
+*v1.6.3「双生」总览，使用演示数据。*
 
 ## 日常使用
 
@@ -18,7 +18,7 @@
 - **看截止**　点击总览底部的活动或卡池，查看公告时间与原文。活动支持截止提醒、标记已领完和忽略。卡池只展示排期和 UP 信息。
 - **收回桌面空间**　可调整缩放、贴边自动收起或隐藏到托盘。设置中可以调整启动提醒和换日前提醒。
 
-鸣潮使用国服官方启动器已有的授权；终末地在组件内用森空岛扫码后选择角色。可以先用演示数据试用。活动和卡池时间来自两款游戏的官方公告。
+鸣潮使用国服官方启动器已有的授权；终末地在组件内用森空岛扫码后选择角色。可以先用演示数据试用。活动和卡池时间来自两款游戏的官方公告，鸣潮卡池时间取自游戏内公告栏。
 
 ## 从源码运行
 

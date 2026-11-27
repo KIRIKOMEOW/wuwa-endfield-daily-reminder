@@ -26,6 +26,22 @@ public sealed partial class MainWindow
         text.FlowDirection, new Typeface(text.FontFamily, text.FontStyle, text.FontWeight, text.FontStretch),
         text.FontSize, text.Foreground, VisualTreeHelper.GetDpi(text).PixelsPerDip).WidthIncludingTrailingWhitespace;
 
+    internal void CheckWuwaPoolPanel()
+    {
+        var labels=VisibleText(_poolsPanel).ToList();
+        var headings=labels.Where(t=>t.Text.StartsWith("当前开放 · ")).Select(t=>t.Text);
+        if (!headings.SequenceEqual(["当前开放 · 新 UP","当前开放 · 复刻","当前开放 · 忆旅"]) ||
+            !labels.Any(t=>t.Text=="4星：星河、晴空" && t.FontSize<=10 && Equals(t.Foreground,FaceMuted)) ||
+            !labels.Any(t=>t.Text.EndsWith(" *") && t.ToolTip?.ToString()?.Contains("公告元数据")==true))
+            throw new InvalidOperationException("鸣潮卡池分组、四星行或元数据标注缺失");
+        _detailScroll.ScrollToBottom();
+        _detailScroll.UpdateLayout();
+        if (_detailScroll.ScrollableHeight-_detailScroll.VerticalOffset>.1)
+            throw new InvalidOperationException("卡池末行无法滚动到达");
+        _detailScroll.ScrollToTop();
+        _detailScroll.UpdateLayout();
+    }
+
     internal object CheckSkinLayout()
     {
         var labels = new List<(Rect Bounds, TextBlock Label)>();
@@ -226,6 +242,7 @@ internal static class SkinChecks
                     throw new InvalidOperationException("账号切换、复制和登录命令没有送达对应目标");
                 var store = new EventStore();
                 var now = DateTimeOffset.UtcNow;
+                if (key=="wuwa") EventPreviewData.WuwaPools(store.Data,now,"metadata");
                 string title = "「" + longName + "」" + (key == "wuwa" ? "3.8版本内容说明" : "版本更新说明");
                 store.Data.Articles[key + ":demo"] = new(now, now, Title: title);
                 store.Data.Events.Add(new("demo", key, longName, "演示", now.AddDays(-1), now.AddHours(2), false, null,
@@ -255,6 +272,7 @@ internal static class SkinChecks
                     widget.CheckEventLayout();
                     widget.OpenPools();
                     Arrange();
+                    if (key=="wuwa") widget.CheckWuwaPoolPanel();
                     widget.ToggleDetails();
                     widget.ToggleDetails();
                 }

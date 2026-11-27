@@ -30,17 +30,26 @@ internal sealed record DeadlineSummary(string Name,string Time,string Tip,double
     {
         var pools=source.Where(p=>!(p.End<=now)).OrderBy(p=>p.End??DateTimeOffset.MaxValue)
             .ThenBy(p=>p.Kind=="武器").ThenBy(p=>p.Name,StringComparer.Ordinal).ToList();
-        var chosen=pools.Where(p=>p.Start<=now).ToList();
+        var wuwa=pools.FirstOrDefault()?.Game=="wuwa";
+        var open=pools.Where(p=>p.Start<=now || wuwa && p.Start==null && p.End.HasValue).ToList();
+        var chosen=open;
+        if(wuwa)
+        {
+            chosen=open.Where(p=>p.NewUp && p.Kind!="忆旅").ToList();
+            if(chosen.Count==0) chosen=open.Where(p=>p.Kind!="忆旅").ToList();
+        }
         if(chosen.Count==0)
         {
             var start=pools.Where(p=>p.Start>now).Min(p=>p.Start);
-            chosen=pools.Where(p=>p.Start==start).ToList();
+            chosen=pools.Where(p=>p.Start==start && (!wuwa || start.HasValue || p.Kind!="忆旅")).ToList();
         }
-        if(chosen.Count==0) return new("暂无已公布的卡池","","暂无已公布的卡池",0);
-        var names=chosen.SelectMany(p=>p.Items.Select(i=>i.Name)).Distinct();
+        var shown=wuwa && open.Count>0 ? open : chosen;
+        var tip=string.Join("\n",shown.Select(p=>p.Name+" · "+string.Join("、",p.Items.Select(i=>i.Name))+"\n"+Stamp(p.Start,zone)+" 至 "+Stamp(p.End,zone)));
+        if(chosen.Count==0) return new("暂无已公布的卡池","",tip.Length>0?tip:"暂无已公布的卡池",0);
+        var names=chosen.SelectMany(p=>p.Items.Where(i=>!wuwa || i.Stars>=5).Select(i=>i.Name).DefaultIfEmpty(p.Name)).Distinct();
         var end=chosen.Min(p=>p.End);
         var time=chosen[0].Start is {} next && next>now ? CountdownText.Until(next-now) : Left(end,now);
-        return new("UP "+string.Join(" · ",names),time,string.Join("\n",chosen.Select(p=>p.Name+" · "+string.Join("、",p.Items.Select(i=>i.Name))+"\n"+Stamp(p.Start,zone)+" 至 "+Stamp(p.End,zone))),Ratio(end,now));
+        return new("UP "+string.Join(" · ",names),time,tip,Ratio(end,now));
     }
 
     internal static DeadlineSummary Activity(EventData? data,string game,DateTimeOffset now,TimeZoneInfo zone)

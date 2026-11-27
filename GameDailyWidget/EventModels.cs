@@ -9,7 +9,8 @@ internal sealed record EventArticle(string Game, EventSource Source, DateTimeOff
 internal sealed record PoolItem(string Name, int Stars, string Category);
 internal sealed record GamePool(string Key, string Game, string Name, string Kind, DateTimeOffset? Start,
     DateTimeOffset? End, bool TimePending, List<PoolItem> Items, EventSource Source, string Version, DateTimeOffset Published,
-    bool StartsAfterMaintenance = false, bool EndsBeforeMaintenance = false);
+    bool StartsAfterMaintenance = false, bool EndsBeforeMaintenance = false,
+    bool NewUp = false, bool NoticeTime = false, bool InclusiveEndMinute = false);
 internal sealed record EventCurrency(string Name, int? Amount);
 internal sealed record GameEvent(string Key, string Game, string Name, string Kind, DateTimeOffset Start,
     DateTimeOffset? End, bool EndPending, DateTimeOffset? ClaimDeadline, EventCurrency Currency,
@@ -21,11 +22,13 @@ internal sealed record GameEvent(string Key, string Game, string Name, string Ki
 internal sealed record Maintenance(string Version, DateTimeOffset Published, DateTimeOffset Start, DateTimeOffset End);
 internal sealed record EventMark(bool Claimed, bool Ignored, DateTimeOffset At, bool Automatic = false, bool ManualOverride = false);
 internal sealed record ArticleStamp(DateTimeOffset FetchedAt, DateTimeOffset StartTime, int ParserVersion = 0,
-    string? Title = null, DateTimeOffset? Published = null, bool ArtChecked = false, string? ImageUrl = null, List<GamePool>? ParsedPools = null);
+    string? Title = null, DateTimeOffset? Published = null, bool ArtChecked = false, string? ImageUrl = null, List<GamePool>? ParsedPools = null,
+    List<string>? NewWuwaItems = null);
 internal sealed record EventSyncState(DateTimeOffset? LastSuccess, DateTimeOffset LastAttempt, string? Error, string? Coverage = null);
 internal sealed class EventData
 {
-    public int Schema { get; set; } = 2;
+    public int Schema { get; set; } = 3;
+    public List<GamePool>? WuwaNoticePools { get; set; }
     public List<GamePool> Pools { get; init; } = new();
     public Dictionary<string, EventSyncState> Sync { get; init; } = new();
     public Dictionary<string, ArticleStamp> Articles { get; init; } = new();

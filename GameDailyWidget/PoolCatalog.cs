@@ -56,9 +56,30 @@ internal static class PoolCatalog
             var source = PoolParser.IsAnnouncement(game, old.Source.Title) && !PoolParser.IsAnnouncement(game,item.Source.Title)
                 ? old.Source : item.Source;
             result[index] = item with { Start=start, End=end, TimePending=start == null || end == null, Source=source,
-                Items=old.Items.Concat(item.Items).DistinctBy(i => (i.Name,i.Stars)).ToList() };
+                NewUp=old.NewUp || item.NewUp, Items=old.Items.Concat(item.Items).DistinctBy(i => (i.Name,i.Stars)).ToList() };
+        }
+        result.RemoveAll(p => p.Items.Count == 0);
+        if (game == "wuwa" && data.WuwaNoticePools != null)
+        {
+            var website = result.ToArray();
+            foreach (var notice in data.WuwaNoticePools)
+            {
+                var name = EventParser.Normalize(notice.Name);
+                var origin = maintenance.FirstOrDefault(m => m.Version == notice.Version);
+                var start = notice.Start;
+                if (notice.StartsAfterMaintenance && origin != null && (start == null || origin.End > start))
+                    start = origin.End;
+                var fiveStars = notice.Items.Where(i => i.Stars == 5).Select(i => i.Name).ToHashSet();
+                var isNew = notice.Kind != "忆旅" && website.Any(w => w.Version == notice.Version && w.NewUp &&
+                    w.Items.Any(i => i.Stars == 5 && fiveStars.Contains(i.Name)));
+                if (!isNew && notice.Kind != "忆旅")
+                    isNew = data.Articles.Values.Any(a => a.NewWuwaItems?.Any(fiveStars.Contains) == true &&
+                        System.Text.RegularExpressions.Regex.Match(a.Title ?? "", @"(\d+\.\d+)\s*版本").Groups[1].Value == notice.Version);
+                result.RemoveAll(p => p.Version == notice.Version && EventParser.Normalize(p.Name) == name);
+                result.Add(notice with { NewUp=isNew, Start=start, TimePending=start == null || notice.End == null });
+            }
         }
         data.Pools.RemoveAll(p => p.Game == game);
-        data.Pools.AddRange(result.Where(p => p.Items.Count > 0));
+        data.Pools.AddRange(result);
     }
 }

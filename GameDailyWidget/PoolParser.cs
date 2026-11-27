@@ -20,7 +20,7 @@ internal static class PoolParser
 
     private static readonly Regex EndLabel = new(@"^[▼/✦·■※\s]*(?:活动|唤取|寻访|申领)?(?:结束时间|截止时间)\s*[：:]?\s*");
 
-    private static string TimeIn(IEnumerable<string> lines)
+    internal static string TimeIn(IEnumerable<string> lines)
     {
         var body = lines.ToArray();
         string Value(Regex label)
@@ -29,7 +29,7 @@ internal static class PoolParser
             {
                 var match = label.Match(body[i]);
                 if (!match.Success) continue;
-                var value = body[i][match.Length..].Trim();
+                var value = body[i][match.Length..].TrimStart('✦','：',':',' ').Trim();
                 return value.Length == 0 ? body.ElementAtOrDefault(i + 1) ?? "" : value;
             }
             return "";
@@ -107,10 +107,25 @@ internal static class PoolParser
         return new(item.Groups["name"].Value, int.Parse(item.Groups["stars"].Value), kind == "武器" && type.Length > 0 ? type : kind);
     }
 
+    internal static List<string> NewWuwaItems(string[] lines)
+    {
+        var items = new List<string>();
+        var active = false;
+        foreach (var line in lines)
+        {
+            if (Regex.IsMatch(line,"^✦[^✦]+✦$") || line.StartsWith('【'))
+                active = line is "✦全新角色✦" or "✦全新共鸣者✦" or "✦全新武器✦";
+            if (active && WuwaItem.Match(line) is { Success:true, Index:0 } item && item.Groups["stars"].Value == "5")
+                items.Add(item.Groups["name"].Value);
+        }
+        return items;
+    }
+
     private static List<GamePool> ReadWuwa(EventArticle article, string[] lines)
     {
         var results = new List<GamePool>();
         string? section = null;
+        bool newSection = false;
         PoolItem? entry = null;
         var itemStart = 0;
         for (var i = 0; i < lines.Length; i++)
@@ -120,6 +135,7 @@ internal static class PoolParser
             {
                 section = Regex.IsMatch(line, "^✦(?:全新|复刻)(?:共鸣者|角色)✦$") ? "角色" :
                     Regex.IsMatch(line, "^✦(?:全新|复刻)武器✦$") ? "武器" : null;
+                newSection = line.StartsWith("✦全新") && article.Source.Title.Contains("版本内容说明");
                 entry = null;
             }
             if (section == null) continue;
@@ -129,7 +145,7 @@ internal static class PoolParser
             var banner = WuwaBanner.Match(line);
             if (!banner.Success || banner.Groups["kind"].Value != section) continue;
             var following = lines.Skip(i + 1).TakeWhile(l => !Regex.IsMatch(l, @"^(?:✦[^✦]+✦|【|[1-5]\s*星|※可通过)"));
-            results.Add(Pool(article, banner.Groups["name"].Value, section, [entry], TimeIn(lines[itemStart..i].Concat(following))));
+            results.Add(Pool(article, banner.Groups["name"].Value, section, [entry], TimeIn(lines[itemStart..i].Concat(following))) with { NewUp=newSection && entry.Stars==5 });
             entry = null;
         }
         // Dedicated banner/re-run notices can also supplement a version note that omitted its schedule.

@@ -37,10 +37,12 @@ public partial class App
         _eventStore = IsPreview ? EventPreviewData.Create(now,args.Contains("--events-claimed"),args.Contains("--events-failed"),args.Contains("--empty"),
             int.TryParse(Value(args,"--event-count"),out var count) ? Math.Clamp(count,1,100) : 3,progressDemo)
             : new EventStore(EventsPath);
+        if (IsPreview && Value(args,"--wuwa-pool-preview") is {} state)
+            EventPreviewData.WuwaPools(_eventStore.Data,now,state);
         if (!IsPreview)
         {
             _eventFeed = new EventFeed();
-            _eventSync = new(_eventStore,_eventFeed,_lifetime.Token);
+            _eventSync = new(_eventStore,_eventFeed,_lifetime.Token, noticeUrl:settings.WuwaNoticeUrl);
             _artCache = new ArtCache();
             _widget!.BindArt(_artCache,_eventSync.GalleryAsync);
             _eventSync.SetOfficialArtAsync = _widget.SetOfficialArtAsync;

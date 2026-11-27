@@ -35,6 +35,7 @@ public sealed class UnifiedSettings
     public ArtFramingNotice WuwaFraming {get;set;}=new();
     public ArtFramingNotice EndfieldFraming {get;set;}=new();
     internal ArtFramingNotice FramingFor(string game)=>game=="wuwa"?WuwaFraming:EndfieldFraming;
+    public string? WuwaNoticeUrl { get; set; }
     public bool CompletionArtEnabled { get; set; } = true;
     public System.Collections.Generic.List<GuideAuthor> GuideAuthors { get; set; } = GuideAuthor.Defaults();
     public bool EventReminderEnabled { get; set; } = true;

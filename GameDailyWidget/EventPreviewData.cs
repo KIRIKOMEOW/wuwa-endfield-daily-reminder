@@ -63,6 +63,22 @@ internal static class EventPreviewData
         return data;
     }
 
+    internal static void WuwaPools(EventData data, DateTimeOffset now, string state)
+    {
+        data.Pools.RemoveAll(p=>p.Game=="wuwa");
+        var source=new EventSource("0","演示唤取公告","");
+        var start=now.AddDays(-2);
+        var end=now.AddDays(5).AddHours(8).AddMinutes(1);
+        var fresh=new GamePool("demo-new","wuwa","晨光来信","角色",start,end,false,
+            [new("演示共鸣者",5,"角色"),new("星河",4,"角色"),new("晴空",4,"角色")],source,"演示",start,NewUp:true);
+        data.Pools.Add(state=="fallback" ? fresh with {Start=null,End=null,TimePending=true} :
+            fresh with {NoticeTime=state=="metadata"});
+        if (state=="fallback") return;
+        data.Pools.Add(fresh with {Key="demo-new-weapon",Kind="武器",Name="微光",Items=[new("演示武器",5,"武器")],End=end.AddHours(1)});
+        data.Pools.Add(fresh with {Key="demo-rerun",Name="海岸回声",Items=[new("演示回归角色",5,"角色")],NewUp=false});
+        data.Pools.Add(fresh with {Key="demo-memory",Name="往日回响",Kind="忆旅",Items=[new("演示自选角色",5,"角色")],NewUp=false});
+    }
+
     internal static Dictionary<string,string> AddProgressPreview(EventStore store, DateTimeOffset now, bool complete)
     {
         var start = now.AddDays(-1);

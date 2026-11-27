@@ -130,6 +130,7 @@ internal static class OfficialArtSourceChecks
         {
             Requests++;
             var url = request.RequestUri!;
+            if (url.AbsoluteUri == EventFeed.NoticeUrl) return Task.FromResult(WuwaNoticeChecks.EmptyResponse());
             if (url.AbsolutePath.EndsWith(".jpg",StringComparison.Ordinal))
             {
                 bool latest = url.AbsoluteUri == Wuwa + "version-2.jpg";

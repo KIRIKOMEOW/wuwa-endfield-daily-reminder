@@ -9,7 +9,7 @@ namespace GameDailyWidget;
 // All state commits run on the caller's dispatcher. Network awaits never hold
 // a copy of the marks or sent ledger that a click or timer could change.
 internal sealed class EventSyncCoordinator(EventStore store, EventFeed feed, CancellationToken cancel,
-    Func<DateTimeOffset>? clock = null)
+    Func<DateTimeOffset>? clock = null, string? noticeUrl = null)
 {
     private static readonly string[] Games = ["wuwa","endfield"];
     private readonly Dictionary<string,Task> _running = new();
@@ -116,15 +116,57 @@ internal sealed class EventSyncCoordinator(EventStore store, EventFeed feed, Can
             if (_images.GetValueOrDefault(game) is { RetryAt: {} due, Download: null } image && now >= due)
                 _ = DownloadVersionImageAsync(game,image);
         }
+        if (!Busy.Contains(NoticeSync) && now >= _next.GetValueOrDefault(NoticeSync)) _ = Request(NoticeSync,now);
     }
 
-    internal Task SyncAsync(DateTimeOffset now) => Task.WhenAll(Request("wuwa",now),Request("endfield",now));
+    private const string NoticeSync = "wuwa-notices";
+
+    internal Task SyncAsync(DateTimeOffset now) => Task.WhenAll(Request("wuwa",now),Request("endfield",now),Request(NoticeSync,now));
+
+    private async Task SyncNotices(DateTimeOffset now)
+    {
+        Busy.Add(NoticeSync);
+        var data = store.Data;
+        try
+        {
+            if (_running.TryGetValue("wuwa",out var website)) await website;
+            var notices = await feed.NoticesAsync(noticeUrl,cancel);
+            cancel.ThrowIfCancellationRequested();
+            var maintenance = data.Maintenance.GetValueOrDefault("wuwa") ?? [];
+            var address = EventFeed.NoticeAddress(noticeUrl);
+            var pools = notices.Select(n => WuwaNoticeParser.Parse(n,maintenance,now,address)).ToList();
+            // After a pool leaves the board, its website entry may still have no dates.
+            // Keep its known deadline while the same version note can still be in scope.
+            var activeVersion = maintenance.Where(m => m.End <= now).MaxBy(m => m.End)?.Version;
+            if (data.WuwaNoticePools is {} previous)
+                pools.AddRange(previous.Where(p => p.End <= now && (p.Version == activeVersion || p.End >= now.AddDays(-60)) &&
+                    !pools.Any(n => n.Version == p.Version && EventParser.Normalize(n.Name) == EventParser.Normalize(p.Name))).ToList());
+            data.WuwaNoticePools = pools;
+            PoolCatalog.Rebuild(data,"wuwa",maintenance);
+            data.Sync[NoticeSync] = new(now,now,null);
+        }
+        catch (OperationCanceledException) when (cancel.IsCancellationRequested) { return; }
+        catch { data.Sync[NoticeSync] = new(data.Sync.GetValueOrDefault(NoticeSync)?.LastSuccess,now,"鸣潮卡池公告同步失败"); }
+        finally
+        {
+            Busy.Remove(NoticeSync);
+            if (!cancel.IsCancellationRequested)
+            {
+                _next[NoticeSync] = _clock() + (data.Sync[NoticeSync].Error == null ? TimeSpan.FromHours(6) : TimeSpan.FromMinutes(10));
+                store.Save();
+                Changed?.Invoke();
+            }
+        }
+    }
 
     private Task Request(string game, DateTimeOffset now)
     {
         if (_running.TryGetValue(game,out var task) && !task.IsCompleted) return task;
-        return _running[game] = SyncGame(game,now);
+        return _running[game] = game == NoticeSync ? SyncNotices(now) : SyncGame(game,now);
     }
+
+    private static bool NeedsNewUp(string game, ArticleStamp stamp) => game == "wuwa" &&
+        stamp.NewWuwaItems == null && stamp.Title?.Contains("版本内容说明") == true;
 
     private async Task SyncGame(string game, DateTimeOffset now)
     {
@@ -138,7 +180,7 @@ internal sealed class EventSyncCoordinator(EventStore store, EventFeed feed, Can
             var listed = articles.Select(a => a.Source.Id).ToHashSet();
             foreach (var (key, old) in data.Articles)
             {
-                if (old.ParserVersion == EventParser.Revision || !key.StartsWith(game + ":",StringComparison.Ordinal)) continue;
+                if ((old.ParserVersion == EventParser.Revision && !NeedsNewUp(game,old)) || !key.StartsWith(game + ":",StringComparison.Ordinal)) continue;
                 var id = key[(game.Length+1)..];
                 if (!EventFeed.ValidId(id) || listed.Contains(id)) continue;
                 var prior = data.Events.FirstOrDefault(e => e.Game == game && e.Source.Id == id);
@@ -151,7 +193,7 @@ internal sealed class EventSyncCoordinator(EventStore store, EventFeed feed, Can
             {
                 var key = game + ":" + article.Source.Id;
                 if (data.Articles.TryGetValue(key, out var stamp) && stamp.ParserVersion == EventParser.Revision &&
-                    (game == "endfield" || stamp.StartTime == article.StartTime)) continue;
+                    !NeedsNewUp(game,stamp) && (game == "endfield" || stamp.StartTime == article.StartTime)) continue;
                 fetched.Add(await feed.BodyAsync(article,cancel));
             }
             cancel.ThrowIfCancellationRequested();
@@ -172,11 +214,12 @@ internal sealed class EventSyncCoordinator(EventStore store, EventFeed feed, Can
                 if (EventFeed.EventTitle(game, article.Source.Title))
                     parsed.AddRange(EventParser.Parse(article, lines, start));
             }
-            foreach (var (article, _) in fetched)
+            foreach (var (article, lines) in fetched)
             {
                 data.Events.RemoveAll(e => e.Game == game && e.Source.Id == article.Source.Id &&
                     !parsed.Any(p => p.Key == e.Key));
-                data.Articles[game + ":" + article.Source.Id] = new(now,article.StartTime,EventParser.Revision,article.Source.Title,article.Published,true,article.ImageUrl,poolsByArticle[article.Source.Id]);
+                data.Articles[game + ":" + article.Source.Id] = new(now,article.StartTime,EventParser.Revision,article.Source.Title,article.Published,true,article.ImageUrl,poolsByArticle[article.Source.Id],
+                    game == "wuwa" && article.Source.Title.Contains("版本内容说明") ? PoolParser.NewWuwaItems(lines) : null);
             }
             foreach (var item in parsed) EventParser.Merge(data.Events, item);
             data.Maintenance[game] = maintenance;

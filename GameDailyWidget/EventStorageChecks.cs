@@ -24,6 +24,7 @@ internal static partial class EventChecks
         var path = Path.Combine(dir, "events.json");
         try
         {
+            await WuwaNoticeChecks.RunAsync(Check);
             var store = new EventStore(path);
             var article = Article("wuwa", "123", "3.8版本内容说明");
             var item = EventParser.Parse(article, ["[样本]签到活动", "✦活动时间：3.8版本期间"]).Single();
@@ -39,10 +40,23 @@ internal static partial class EventChecks
             var migrated = new EventStore(path);
             migrated.Save();
             var reloaded = new EventStore(path);
-            Check(reloaded.Warning == null && reloaded.Data.Schema == 2 && reloaded.Data.Pools.Count == 0 &&
+            Check(reloaded.Warning == null && reloaded.Data.Schema == 3 && reloaded.Data.Pools.Count == 0 &&
                 reloaded.Data.Events.Single() == item && reloaded.Data.Marks[item.Key].Claimed &&
                 reloaded.Data.Sent[item.Key+"|slot"] == SampleTime,
-                "schema 1 缺少卡池字段可原子升级为 schema 2，保留活动、标记与发送记录");
+                "schema 1 缺少卡池字段可原子升级为 schema 3，保留活动、标记与发送记录");
+            legacyFile["schema"] = 2;
+            var previousPool = new GamePool("endfield|test","endfield","演示","干员",SampleTime,null,true,
+                [new("测试干员",6,"干员")],new("1","演示公告",""),"演示",SampleTime);
+            legacyFile["pools"] = System.Text.Json.JsonSerializer.SerializeToNode(new[]{previousPool},EventStore.Json);
+            legacyFile.Remove("wuwaNoticePools");
+            File.WriteAllText(path,legacyFile.ToJsonString());
+            var previousVersion = new EventStore(path);
+            previousVersion.Save();
+            var restored = new EventStore(path);
+            Check(restored.Warning == null && restored.Data.Schema == 3 && restored.Data.WuwaNoticePools == null &&
+                System.Text.Json.JsonSerializer.Serialize(restored.Data.Pools.Single()) == System.Text.Json.JsonSerializer.Serialize(previousPool) &&
+                restored.Data.Events.Single() == item && restored.Data.Marks[item.Key].Claimed && restored.Data.Sent[item.Key+"|slot"] == SampleTime,
+                "schema 2 升级保留终末地卡池、活动、标记和投递记录");
             EventSyncCoordinator.ResolvePending(store.Data, "wuwa", [
                 new("3.8",SampleTime,SampleTime.AddDays(1),SampleTime.AddDays(2)),
                 new("3.9",SampleTime.AddDays(2),SampleTime.AddDays(3),SampleTime.AddDays(4))]);
@@ -82,7 +96,7 @@ internal static partial class EventChecks
             Check(handler.BodyCalls == 1 && memory.Data.Articles.ContainsKey("wuwa:123"), "已解析的正文按版本缓存");
             Check(memory.Data.Sync["endfield"].Error != null && memory.Data.Sync["endfield"].LastSuccess == SampleTime
                 && memory.Data.Events.Contains(cached) && memory.Data.Sync["wuwa"].Error == null && memory.Data.Events.Any(e => e.Name == "样本"), "单站失败保留上次成功，另一游戏正常");
-            Check(handler.PrivateHeader == false && handler.Hosts.SetEquals(["media-cdn-mingchao.kurogame.com","endfield.hypergryph.com"]),
+            Check(handler.PrivateHeader == false && handler.Hosts.SetEquals(["media-cdn-mingchao.kurogame.com","endfield.hypergryph.com","aki-gm-resources-back.aki-game.com"]),
                 "注入传输核对仅官网域名、通用 UA、无账号请求头");
             var upgrade = new EventStore();
             upgrade.Data.Events.Add(item);
@@ -167,6 +181,7 @@ internal static partial class EventChecks
             var uri = request.RequestUri!;
             Hosts.Add(uri.Host);
             PrivateHeader |= request.Headers.Any(h => h.Key != "User-Agent") || request.Headers.UserAgent.ToString() != "DesktopCalendar/1.0";
+            if (uri.AbsoluteUri == EventFeed.NoticeUrl) return Task.FromResult(WuwaNoticeChecks.EmptyResponse());
             if (uri.Host == "endfield.hypergryph.com")
             {
                 EndfieldCalls++;

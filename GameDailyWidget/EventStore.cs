@@ -28,8 +28,9 @@ internal sealed class EventStore
             foreach (var field in new[] { "schema", "events", "sync", "articles", "maintenance", "marks", "sent" })
                 if (!root.TryGetProperty(field, out _)) throw new InvalidDataException();
             var data = root.Deserialize<EventData>(Json);
-            if (data == null || data.Schema is not (1 or 2) || data.Pools == null ||
-                (data.Schema == 2 && !root.TryGetProperty("pools", out _)) ||
+            if (data == null || data.Schema is not (1 or 2 or 3) || data.Pools == null ||
+                (data.Schema >= 2 && !root.TryGetProperty("pools", out _)) ||
+                data.WuwaNoticePools?.Any(p => !ValidPool(p) || p.Game != "wuwa") == true ||
                 data.Pools.Any(p => !ValidPool(p)) ||
                 data.Events == null || data.Marks == null || data.Sent == null
                 || data.Sync == null || data.Articles == null || data.Maintenance == null
@@ -38,7 +39,7 @@ internal sealed class EventStore
                 || data.Maintenance.Values.Any(list => list == null || list.Any(m => m == null))
                 || data.Sync.Values.Any(s => s == null) || data.Articles.Values.Any(s => s == null || s.ParsedPools?.Any(p => !ValidPool(p, allowEmpty:true)) == true)
                 || data.Marks.Values.Any(m => m == null)) throw new InvalidDataException();
-            data.Schema = 2;
+            data.Schema = 3;
             Data = data;
         }
         catch (FileNotFoundException) { }
@@ -47,7 +48,8 @@ internal sealed class EventStore
     }
 
     private static bool ValidPool(GamePool? p, bool allowEmpty = false) => p?.Source != null && p.Game is ("wuwa" or "endfield") &&
-        !string.IsNullOrWhiteSpace(p.Name) && !string.IsNullOrWhiteSpace(p.Key) && p.Items != null && (allowEmpty || p.Items.Count > 0) &&
+        !string.IsNullOrWhiteSpace(p.Name) && !string.IsNullOrWhiteSpace(p.Key) && p.Items != null && (allowEmpty || p.Items.Count > 0 ||
+            p.Game == "wuwa" && Uri.TryCreate(p.Source.Url,UriKind.Absolute,out var url) && url.Host == "aki-gm-resources-back.aki-game.com") &&
         p.Items.All(i => i != null && !string.IsNullOrWhiteSpace(i.Name) && i.Stars is >= 1 and <= 6);
 
     internal void Save()

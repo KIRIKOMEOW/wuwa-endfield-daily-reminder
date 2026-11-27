@@ -24,6 +24,21 @@ internal static class DeadlineChecks
             Check(DeadlineSummary.Pools([],now,zone).Name=="暂无已公布的卡池","无卡池");
         }
         var e=data.Events.First();
+        var example=new EventData();
+        EventPreviewData.WuwaPools(example,now,"groups");
+        var newPools=example.Pools.Where(p=>p.NewUp).ToArray();
+        var earliest=newPools.Min(p=>p.End)!.Value;
+        var summary=DeadlineSummary.Pools(example.Pools,now,zone);
+        Check(summary.Name=="UP 演示共鸣者 · 演示武器" && summary.Time=="剩 "+CountdownText.Format(earliest-now) &&
+            example.Pools.All(p=>summary.Tip.Contains(p.Name)), "鸣潮合并当期新五星，采用最早截止，悬停含复刻及忆旅");
+        example.Pools.RemoveAll(p=>p.NewUp);
+        Check(DeadlineSummary.Pools(example.Pools,now,zone).Name=="UP 演示回归角色","新 UP 缺席优先非忆旅复刻");
+        var rerun=example.Pools.Single(p=>p.Kind!="忆旅");
+        example.Pools.Remove(rerun);
+        example.Pools.Add(rerun with {Start=now.AddDays(2)});
+        Check(DeadlineSummary.Pools(example.Pools,now,zone).Time=="2 天后开始","仅忆旅开放时显示下一期");
+        example.Pools.RemoveAll(p=>p.Kind!="忆旅");
+        Check(DeadlineSummary.Pools(example.Pools,now,zone).Name=="暂无已公布的卡池","仅剩忆旅时保留悬停明细");
         var d=new EventData();
         d.Events.AddRange(data.Events);foreach(var p in data.Marks)d.Marks[p.Key]=p.Value;
         d.Events[0]=e with {End=now.AddHours(1),ClaimDeadline=now.AddDays(3)};

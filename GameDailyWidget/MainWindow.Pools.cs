@@ -49,33 +49,47 @@ public sealed partial class MainWindow
         if (!_poolsOpen || _eventStore == null) return;
         var now = DateTimeOffset.UtcNow;
         var pools = PoolCatalog.Current(_eventStore.Data,_currentGame,now).ToArray();
+        bool wuwa = _currentGame=="wuwa";
+        int Group(GamePool p) => p.Kind=="忆旅" ? 2 : p.NewUp ? 0 : 1;
+        if (wuwa) pools = pools.OrderBy(p=>p.Start>now ? 2 : p.Start==null && p.End==null ? 1 : 0).ThenBy(Group).ToArray();
         var zone = _displayZone();
         string Local(DateTimeOffset time) => DailyReminderSchedule.Local(time,zone,"MM/dd HH:mm");
         string Timing(GamePool p)
         {
+            var shownEnd = p.InclusiveEndMinute ? p.End?.AddMinutes(-1) : p.End;
             if (p.Start is {} start && start > now)
-                return Local(start) + " 开始 · " + (p.End is {} end ? Local(end) + " 结束" : "结束时间待公告");
+                return Local(start) + " 开始 · " + (shownEnd is {} end ? Local(end) + " 结束" : "结束时间待公告");
             if (p.End is {} finish)
-                return "剩 " + Countdown(finish-now) + " · " + Local(finish) + " 结束";
+                return "剩 " + Countdown(finish-now) + " · " + Local(shownEnd!.Value) + " 结束";
             return p.Start is {} since ? Local(since) + " 起 · 结束时间待公告" : "时间待公告";
         }
         var signature = _currentGame + zone.Id + string.Join("\n",pools.Select(p =>
-            p.Key + p.Name + p.Kind + Timing(p) + string.Join("|",p.Items)));
+            p.Key + p.Name + p.Kind + p.NewUp + p.NoticeTime + p.Start + p.End + Timing(p) + string.Join("|",p.Items)));
         if (_poolState == signature) return;
         _poolState = signature;
         _poolsPanel.Children.Clear();
         _firstGuide = null;
+        string? previousHeading = null;
         foreach (var pool in pools)
         {
+            if (wuwa)
+            {
+                var phase = pool.Start>now ? "即将开放" : pool.Start==null && pool.End==null ? "时间待公告" : "当前开放";
+                var group = Group(pool) switch { 0=>"新 UP", 1=>"复刻", _=>"忆旅" };
+                var heading = phase+" · "+group;
+                if (heading!=previousHeading) _poolsPanel.Children.Add(Label(heading,11,Sand,FontWeights.SemiBold));
+                previousHeading=heading;
+            }
             var block = new StackPanel { Margin=new Thickness(0,4,0,5) };
-            var name = Label(pool.Name,13,FaceText,FontWeights.SemiBold);
+            var name = Label(wuwa ? pool.Name+" · "+pool.Kind : pool.Name,13,FaceText,FontWeights.SemiBold);
             Trim(name); name.ToolTip=pool.Name;
             block.Children.Add(name);
-            var timing = Label(Timing(pool),10,FaceMuted);
+            var timing = Label(Timing(pool)+(pool.NoticeTime?" *":""),10,FaceMuted);
             string Beijing(DateTimeOffset? t) => t?.ToOffset(EventParser.China).ToString("MM/dd HH:mm") ?? "待公告";
-            timing.ToolTip = $"北京时间 {Beijing(pool.Start)} 至 {Beijing(pool.End)}\n来源：{pool.Source.Title}";
+            timing.ToolTip = $"北京时间 {Beijing(pool.Start)} 至 {Beijing(pool.InclusiveEndMinute ? pool.End?.AddMinutes(-1) : pool.End)}\n来源：{pool.Source.Title}" +
+                (pool.NoticeTime ? "\n* 正文未提供时间，此处使用公告元数据。" : "");
             block.Children.Add(timing);
-            foreach (var item in pool.Items)
+            foreach (var item in pool.Items.Where(i=>!wuwa || i.Stars==5))
             {
                 var row = new DockPanel { Margin=new Thickness(0,3,0,0) };
                 var guide = PanelButton("攻略 ▾","查看" + item.Name + "的攻略链接");
@@ -83,13 +97,20 @@ public sealed partial class MainWindow
                 guide.Click += (_,_) => { var menu=GuideMenu(guide); menu.IsOpen=true; };
                 _firstGuide ??= guide;
                 DockPanel.SetDock(guide,Dock.Right); row.Children.Add(guide);
-                var stars = Label("★" + item.Stars,12,IsEndfield ? Ink : Sand,FontWeights.SemiBold);
+                var stars = Label((wuwa && pool.Kind=="忆旅" ? "可选 ★" : "★") + item.Stars,12,IsEndfield ? Ink : Sand,FontWeights.SemiBold);
                 stars.Margin = new Thickness(0,0,8,0);
                 row.Children.Add(stars);
                 var title = Label(item.Name+" · "+item.Category,12,FaceText);
                 Trim(title); title.ToolTip=title.Text;
                 row.Children.Add(title);
                 block.Children.Add(row);
+            }
+            var four = pool.Items.Where(i=>i.Stars==4).Select(i=>i.Name).ToArray();
+            if (wuwa && four.Length>0)
+            {
+                var lower = Label("4星："+string.Join("、",four),10,FaceMuted);
+                Trim(lower); lower.ToolTip=lower.Text;
+                block.Children.Add(lower);
             }
             _poolsPanel.Children.Add(block);
         }
@@ -116,4 +137,13 @@ public sealed partial class MainWindow
     }
 
     internal ContextMenu GuideMenuForPreview() => GuideMenu(_firstGuide ?? throw new InvalidOperationException("预览卡池没有 UP 条目"));
+
+    internal FrameworkElement PoolContentsForPreview()
+    {
+        // Export the full arranged scroll content, including rows below the monitor's viewport.
+        var scale = _settings.Scale;
+        var page = new Grid {Width=_poolsPanel.ActualWidth*scale,Height=_poolsPanel.ActualHeight*scale,Background=Paint("#181529")};
+        page.Children.Add(new Border {Background=new System.Windows.Media.VisualBrush(_poolsPanel)});
+        return page;
+    }
 }

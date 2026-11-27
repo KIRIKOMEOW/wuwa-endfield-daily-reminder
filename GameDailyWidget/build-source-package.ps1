@@ -25,7 +25,7 @@ New-Item -ItemType Directory -Path $taskVerification -Force | Out-Null
 $taskEvidence = Join-Path $PSScriptRoot 'verification'
 Copy-Item -LiteralPath (Join-Path $taskEvidence 'fixtures') -Destination $taskVerification -Recurse
 foreach ($taskFile in Get-ChildItem -LiteralPath $taskEvidence -File) {
-    if ($taskFile.Name -like 'v1.6.2-*.json' -or $taskFile.Name -like 'v1.6.1-*.json' -or $taskFile.Name -like 'v1.6.0-*.json' -or $taskFile.Name -like 'v1.5.3-*.json' -or $taskFile.Name -like 'v1.5.2-*.json' -or $taskFile.Name -like 'v1.5.1-*.json' -or $taskFile.Name -like 'v1.5.0-*.json' -or $taskFile.Name -like 'v1.4-*' -or $taskFile.Name -like 'v1.4.1-*' -or $taskFile.Name -like 'v1.4.2-*' -or $taskFile.Name -like 'v1.4.3-*' -or $taskFile.Name -like 'v1.4.4-*' -or $taskFile.Name -in @('接口字段核对.md','限时活动开发记录.md')) {
+    if ($taskFile.Name -like 'v1.6.3-*.json' -or $taskFile.Name -like 'v1.6.2-*.json' -or $taskFile.Name -like 'v1.6.1-*.json' -or $taskFile.Name -like 'v1.6.0-*.json' -or $taskFile.Name -like 'v1.5.3-*.json' -or $taskFile.Name -like 'v1.5.2-*.json' -or $taskFile.Name -like 'v1.5.1-*.json' -or $taskFile.Name -like 'v1.5.0-*.json' -or $taskFile.Name -like 'v1.4-*' -or $taskFile.Name -like 'v1.4.1-*' -or $taskFile.Name -like 'v1.4.2-*' -or $taskFile.Name -like 'v1.4.3-*' -or $taskFile.Name -like 'v1.4.4-*' -or $taskFile.Name -in @('接口字段核对.md','限时活动开发记录.md')) {
         Copy-Item -LiteralPath $taskFile.FullName -Destination $taskVerification
     }
 }

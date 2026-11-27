@@ -8,7 +8,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AssemblyName>GameDailyWidget</AssemblyName>
     <RootNamespace>GameDailyWidget</RootNamespace>
-    <Version>1.6.2</Version>
+    <Version>1.6.3</Version>
     <Product>双游戏日常组件</Product>
     <Description>鸣潮与终末地日常桌面组件</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -17,6 +17,7 @@
     <DefaultItemExcludes>$(DefaultItemExcludes);dist/**;verification/**;design/**;tests/**</DefaultItemExcludes>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="verification/fixtures/wuwa-notices.json" LogicalName="wuwa-notices.json" />
     <EmbeddedResource Include="verification/fixtures/events/endfield-progress.json" LogicalName="events.endfield-progress.json" />
     <EmbeddedResource Include="verification/fixtures/events/coverage.tsv" LogicalName="events.coverage.tsv" />
     <EmbeddedResource Include="verification/fixtures/events/*.txt" LogicalName="events.%(Filename)%(Extension)" />

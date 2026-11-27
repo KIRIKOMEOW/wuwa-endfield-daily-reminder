@@ -429,6 +429,8 @@ public partial class App : Application
                         surface.Children.Add(overlay);
                         RenderOffscreen(surface,render);
                     }
+                    else if (args.Contains("--pools") && args.Contains("--preview-pool-content"))
+                        RenderOffscreen(_widget.PoolContentsForPreview(),render);
                     else if (args.Contains("--edge-strip-preview"))
                     {
                         _widget.SetCollapsedSkinStrip(true);

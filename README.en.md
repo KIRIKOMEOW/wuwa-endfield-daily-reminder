@@ -2,7 +2,7 @@
 
 [简体中文](README.md) · **English**
 
-**[Download GameDailyWidget.exe (Windows x64 · v1.6.2)](https://github.com/KIRIKOMEOW/wuwa-endfield-daily-reminder/releases/download/v1.6.2/GameDailyWidget.exe)**
+**[Download the latest GameDailyWidget.exe (Windows x64)](https://github.com/KIRIKOMEOW/wuwa-endfield-daily-reminder/releases/latest/download/GameDailyWidget.exe)**
 
 Double-click the downloaded EXE to start the widget. The .NET runtime is included.
 
@@ -10,7 +10,7 @@ A Windows desktop widget for Wuthering Waves and Arknights: Endfield. The split 
 
 ![Split overview with Waveplates and daily activity on the left, Sanity and daily activity on the right, and banner and event countdowns below.](docs/overview.png)
 
-*The v1.6.2 split overview. The widget UI is in Chinese.*
+*The v1.6.3 split overview with demo data. The widget UI is in Chinese.*
 
 ## Using the widget
 
@@ -18,7 +18,7 @@ A Windows desktop widget for Wuthering Waves and Arknights: Endfield. The split 
 - **Track deadlines.** Select an event or banner at the bottom to see its schedule and official announcement. Events support deadline reminders, claim tracking and an ignore option. Banners show featured items and dates.
 - **Keep it out of the way.** Resize the card, dock it at the screen edge or hide it in the system tray. Startup and pre-reset reminders are configurable.
 
-Wuthering Waves uses an existing sign-in from the mainland Chinese official launcher. For Endfield, scan the QR code with Skland and select a character. Demo mode works without an account. Event and banner schedules come from the games’ official announcements.
+Wuthering Waves uses an existing sign-in from the mainland Chinese official launcher. For Endfield, scan the QR code with Skland and select a character. Demo mode works without an account. Event and banner schedules come from the games’ official announcements. Wuthering Waves banner times come from the in-game notice board.
 
 ## Build and run
 
